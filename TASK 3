@@ -1,0 +1,69 @@
+# SMS Spam Detection using TF-IDF + Naive Bayes, Logistic Regression, and SVM
+
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
+from sklearn.metrics import classification_report, confusion_matrix
+
+# -------------------------------
+# 1. Load dataset
+# -------------------------------
+# Download from: https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset
+# File: spam.csv
+
+df = pd.read_csv("spam.csv", encoding="latin-1")[['v1', 'v2']]
+df.columns = ['label', 'message']
+
+print("Dataset shape:", df.shape)
+print(df.head())
+
+# -------------------------------
+# 2. Preprocessing
+# -------------------------------
+# Convert labels to binary (0 = ham, 1 = spam)
+df['label'] = df['label'].map({'ham': 0, 'spam': 1})
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(
+    df['message'], df['label'], test_size=0.2, random_state=42, stratify=df['label']
+)
+
+# -------------------------------
+# 3. TF-IDF Vectorization
+# -------------------------------
+tfidf = TfidfVectorizer(stop_words='english', lowercase=True)
+X_train_tfidf = tfidf.fit_transform(X_train)
+X_test_tfidf = tfidf.transform(X_test)
+
+# -------------------------------
+# 4. Model training & evaluation
+# -------------------------------
+models = {
+    "Naive Bayes": MultinomialNB(),
+    "Logistic Regression": LogisticRegression(max_iter=1000),
+    "SVM": LinearSVC()
+}
+
+for name, model in models.items():
+    print(f"\n--- {name} ---")
+    model.fit(X_train_tfidf, y_train)
+    y_pred = model.predict(X_test_tfidf)
+
+    print("Confusion Matrix:")
+    print(confusion_matrix(y_test, y_pred))
+    print("\nClassification Report:")
+    print(classification_report(y_test, y_pred, digits=4))
+
+# -------------------------------
+# 5. Save TF-IDF & Best Model (optional)
+# -------------------------------
+# Example: Save Naive Bayes model
+import joblib
+joblib.dump(models["Naive Bayes"], "spam_model_nb.pkl")
+joblib.dump(tfidf, "tfidf_vectorizer.pkl")
+
+print("\nModel and vectorizer saved for future use.")
