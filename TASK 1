@@ -1,0 +1,34 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import classification_report
+
+# 1. Load Data (replace with your actual data loading)
+# Assuming 'data.csv' has columns 'plot_summary' and 'genre'
+df = pd.read_csv('data.csv')
+
+# 2. Preprocessing (simplified)
+df['plot_summary'] = df['plot_summary'].str.lower().str.replace('[^\w\s]', '', regex=True)
+
+# 3. Split Data
+X_train, X_test, y_train, y_test = train_test_split(df['plot_summary'], df['genre'], test_size=0.2, random_state=42)
+
+# 4. Feature Engineering (TF-IDF)
+tfidf_vectorizer = TfidfVectorizer(max_features=5000) # Limit vocabulary size
+X_train_tfidf = tfidf_vectorizer.fit_transform(X_train)
+X_test_tfidf = tfidf_vectorizer.transform(X_test)
+
+# 5. Model Training (Naive Bayes)
+naive_bayes_model = MultinomialNB()
+naive_bayes_model.fit(X_train_tfidf, y_train)
+
+# 6. Evaluation
+y_pred = naive_bayes_model.predict(X_test_tfidf)
+print(classification_report(y_test, y_pred))
+
+# 7. Prediction on new data
+new_plot = ["A young wizard discovers he has magical powers and must attend a magical school to defeat an evil sorcerer."]
+new_plot_tfidf = tfidf_vectorizer.transform(new_plot)
+predicted_genre = naive_bayes_model.predict(new_plot_tfidf)
+print(f"Predicted genre: {predicted_genre[0]}")
