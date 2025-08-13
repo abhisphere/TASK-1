@@ -1,0 +1,62 @@
+# Fraud Detection Model using Logistic Regression, Decision Tree, and Random Forest
+
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+
+# -------------------------------
+# 1. Load dataset
+# -------------------------------
+# Download from: https://www.kaggle.com/mlg-ulb/creditcardfraud
+# Place it in the same folder and name it "creditcard.csv"
+
+df = pd.read_csv("creditcard.csv")
+print("Dataset shape:", df.shape)
+print(df.head())
+
+# -------------------------------
+# 2. Feature selection
+# -------------------------------
+X = df.drop("Class", axis=1)   # Features
+y = df["Class"]                # Target (0 = legit, 1 = fraud)
+
+# Standardize features (important for Logistic Regression)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# -------------------------------
+# 3. Train-test split
+# -------------------------------
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y, test_size=0.3, random_state=42, stratify=y
+)
+
+# -------------------------------
+# 4. Model training & evaluation
+# -------------------------------
+models = {
+    "Logistic Regression": LogisticRegression(max_iter=1000),
+    "Decision Tree": DecisionTreeClassifier(random_state=42),
+    "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)
+}
+
+for name, model in models.items():
+    print(f"\n--- {name} ---")
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+
+    print("Confusion Matrix:")
+    print(confusion_matrix(y_test, y_pred))
+    print("\nClassification Report:")
+    print(classification_report(y_test, y_pred, digits=4))
+
+# -------------------------------
+# 5. Observations
+# -------------------------------
+print("\nNote: Dataset is highly imbalanced (~0.17% fraud cases).")
+print("Consider using techniques like SMOTE, undersampling, or anomaly detection for improvement.")
